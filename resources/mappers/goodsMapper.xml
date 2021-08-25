@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="goodsMapper">
+
+<!-- 01. 상품 전체 목록 -->
+<select id = "listProduct" resultType = "com.project.goods.vo.GoodsVO">
+	SELECT	MGNUM, MGNAME, MGPRICE, MGCONTENT, MGIMG
+	FROM EX_GOODS
+	ORDER BY CATECODE ASC
+</select>
+
+<select id = "aasList" resultType = "com.project.goods.vo.GoodsViewVO">
+	SELECT G.MGNUM, G.MGNAME, C.CATECODEREF,C.CATENAME, G.MGPRICE, G.MGCONTENT, G.MGIMG, G.MGSTOCK, G.CATECODE
+	FROM EX_GOODS G
+	INNER JOIN GOODS_CATEGORY C ON G.CATECODE = C.CATECODE
+	WHERE C.CATECODEREF = 100
+	ORDER BY CATECODE ASC
+</select>
+
+<select id = "bbsList" resultType = "com.project.goods.vo.GoodsViewVO">
+	SELECT G.MGNUM, G.MGNAME, C.CATECODEREF,C.CATENAME, G.MGPRICE, G.MGCONTENT, G.MGIMG, G.MGSTOCK, G.CATECODE
+	FROM EX_GOODS G
+	INNER JOIN GOODS_CATEGORY C ON G.CATECODE = C.CATECODE
+	WHERE C.CATECODEREF = 200
+	ORDER BY CATECODE ASC
+</select>
+
+<!-- 02. 상품 상세 보기
+<select id = "detailProduct" resultType = "com.project.goods.vo.GoodsVO">
+	SELECT MGNUM, MGNAME, MGPRICE, MGCONTENT, MGIMG ,MGSTOCK,CATECODE
+	FROM EX_GOODS
+	WHERE MGNUM = #{mgNum}
+</select> -->
+
+<!-- 03. 상품 등록 -->
+<insert id="register">
+		INSERT INTO EX_GOODS  (MGNUM,MGNAME,MGPRICE,MGSTOCK,MGCONTENT,MGIMG,MGTHUMBIMG,CATECODE)
+			VALUES (PRODUCT_SEQ.nextval,#{mgName},#{mgPrice},#{mgStock},#{mgContent},#{mgImg},#{mgThumbImg},#{cateCode})
+</insert>
+
+<!-- 상품수정  -->
+<update id="productModify" parameterType="com.project.goods.vo.GoodsVO">
+	UPDATE EX_GOODS
+	SET 
+	MGNAME= #{mgName},
+	MGPRICE = #{mgPrice},
+	MGSTOCK =#{mgStock},
+	MGIMG = #{mgImg},
+	MGCONTENT = #{mgContent},
+	CATECODE = #{cateCode}
+	WHERE MGNUM = #{mgNum}
+</update>
+
+<!-- 상품삭제 -->
+<delete id="productDelete">
+	DELETE EX_GOODS
+	WHERE MGNUM = #{mgNum}
+</delete>
+
+<!-- 카테고리 호출 -->
+<select id="category" resultType="com.project.goods.vo.CategoryVO">
+	select level, cateName,cateCode,cateCodeRef
+	from goods_category
+	Start with cateCodeRef is null connect by prior cateCode = cateCodeRef
+			
+</select>
+
+<!-- 상품 조회 + 카테고리 조인 -->
+<select id="goodsView" resultType="com.project.goods.vo.GoodsViewVO">
+	SELECT 
+		G.MGNUM, G.MGNAME, C.CATECODEREF,C.CATENAME, G.MGPRICE, G.MGCONTENT, G.MGIMG, G.MGSTOCK, G.CATECODE
+		FROM EX_GOODS G
+			INNER JOIN GOODS_CATEGORY C
+				ON G.CATECODE = C.CATECODE
+			WHERE MGNUM = #{mgNum}
+</select>
+
+<!-- 카테고리 리스트 -->
+<select id="cateList" resultType="com.project.goods.vo.GoodsViewVO">
+	select
+    g.mgNum, g.mgName,g.cateCode,c.cateCodeRef,c.cateName,mgPrice,mgStock,mgContent,g.mgImg
+    from ex_goods g
+            inner join goods_category c
+                on g.cateCode = c.cateCode
+                where g.cateCode = #{cateCode}
+</select>
+
+<!-- DB 전체 반지리스트 -->
+<select id="ringList" resultType="com.project.goods.vo.GoodsViewVO">
+	select
+    g.mgNum, g.mgName,g.cateCode,c.cateCodeRef,c.cateName,mgPrice,mgStock,mgContent,g.mgImg
+    from ex_goods g
+            inner join goods_category c
+                on g.cateCode = c.cateCode
+                where g.cateCode = 101 
+                or g.cateCode = 201
+</select>
+
+<!-- DB 전체 귀걸이 리스트 -->
+<select id="earringList" resultType="com.project.goods.vo.GoodsViewVO">
+	select
+    g.mgNum, g.mgName,g.cateCode,c.cateCodeRef,c.cateName,mgPrice,mgStock,mgContent,g.mgImg
+    from ex_goods g
+            inner join goods_category c
+                on g.cateCode = c.cateCode
+                where g.cateCode = 102 
+                or g.cateCode = 202
+</select>
+
+<!-- DB 전체 팔찌 리스트 -->
+<select id="braceletList" resultType="com.project.goods.vo.GoodsViewVO">
+	select
+    g.mgNum, g.mgName,g.cateCode,c.cateCodeRef,c.cateName,mgPrice,mgStock,mgContent,g.mgImg
+    from ex_goods g
+            inner join goods_category c
+                on g.cateCode = c.cateCode
+                where g.cateCode = 103 
+                or g.cateCode = 203
+</select>
+
+<!-- DB 전체 목걸이 리스트 -->
+<select id="necklaceList" resultType="com.project.goods.vo.GoodsViewVO">
+	select
+    g.mgNum, g.mgName,g.cateCode,c.cateCodeRef,c.cateName,mgPrice,mgStock,mgContent,g.mgImg
+    from ex_goods g
+            inner join goods_category c
+                on g.cateCode = c.cateCode
+                where g.cateCode = 104 
+                or g.cateCode = 204
+</select>
+
+<!-- 상품 전체 목록 -->
+<select id = "allGoods" resultType = "com.project.goods.vo.GoodsViewVO" parameterType = "com.project.board.vo.Criteria">
+	
+		SELECT MGNUM, MGNAME, CATECODE, CATECODEREF, CATENAME, MGPRICE, MGSTOCK, MGCONTENT, MGIMG
+		FROM (
+			SELECT g.MGNUM, g.MGNAME, g.CATECODE, c.CATECODEREF, c.CATENAME, g.MGPRICE, g.MGSTOCK, g.MGCONTENT, g.MGIMG,
+			ROW_NUMBER() OVER(ORDER BY g.MGNUM DESC) AS RNUM
+			FROM EX_GOODS g
+			INNER JOIN GOODS_CATEGORY c
+			ON g.CATECODE = c.CATECODE
+			WHERE 1=1
+				<include refid = "search"></include>			   
+		) MP
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		ORDER BY MGNUM DESC
+	
+</select>
+
+<!-- 총 상품의 수 -->
+<select id = "listCount" resultType = "int"  parameterType="com.project.board.vo.SearchCriteria">
+	
+		SELECT COUNT(MGNUM)
+		FROM EX_GOODS
+		WHERE 1=1
+		<include refid = "search"></include>
+	
+</select>
+
+<!-- 상품검색 -->
+<sql id="search">
+	<if test="searchType != null">
+		<if test="searchType == 't'.toString()">AND MGNAME LIKE '%' || #{keyword} || '%'</if>						
+	</if>
+</sql>
+
+<!-- 재고 변경 -->
+<update id = "updateAmount" parameterType = "com.project.goods.vo.GoodsViewVO">
+	UPDATE EX_GOODS
+	SET MGSTOCK = ${mgStock}
+	WHERE MGNUM = ${mgNum}
+</update>
+
+<!-- 가격 변경 -->
+<update id = "updatePrice" parameterType = "com.project.goods.vo.GoodsViewVO">
+	UPDATE EX_GOODS
+	SET MGPRICE = ${mgPrice}
+	WHERE MGNUM = ${mgNum}
+</update>
+
+</mapper>

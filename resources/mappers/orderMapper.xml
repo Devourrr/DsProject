@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="orderMapper">
+
+<!-- 주문 -->
+<insert id="orderInsert">
+       INSERT INTO MORDER (ORDERNUM,ORDERDATE,ORDERPRODUCTNAME,ORDERAMOUNT,ORDERPRICE,TOTALMONEY,ORDERNAME,ORDERPHONE,ORDERADDR1,ORDERADDR2,ORDERADDR3,ORDERREQ,MID,MGNUM,ORDERTOTAL)
+       VALUES (order_seq.nextval,sysdate,#{orderProductName},#{orderAmount},#{orderPrice},#{totalMoney},#{orderName},#{orderPhone},#{orderAddr1},#{orderAddr2},#{orderAddr3},#{orderReq},#{mId},#{mgNum},#{orderTotal})
+</insert>
+
+<select id = "orderList" resultType = "com.project.order.vo.OrderVO">
+	<![CDATA[
+		SELECT
+			ORDERPRODUCTNAME,
+			ORDERAMOUNT,
+			ORDERPRICE,
+			ORDERSTATE
+		FROM
+			MORDER
+		WHERE ORDERTOTAL = #{orderTotal}
+	]]>
+</select>
+
+<select id = "order" resultType = "com.project.order.vo.OrderVO">
+	SELECT DISTINCT
+	ORDERTOTAL,TOTALMONEY,ORDERSTATE
+	FROM MORDER
+	WHERE MID = #{mid}
+</select>
+
+<!-- Order Info (ADMIN) -->
+<select id = "orderInfo" resultType = "com.project.order.vo.OrderVO">
+	
+		SELECT ORDERNUM, MID, ORDERPRODUCTNAME, ORDERADDR1, ORDERADDR2, ORDERADDR3, ORDERDATE, ORDERSTATE
+		FROM (
+			SELECT
+				ORDERNUM,
+				MID, 
+				ORDERPRODUCTNAME, 
+				ORDERADDR1, 
+				ORDERADDR2, 
+				ORDERADDR3, 
+				ORDERDATE, 
+				ORDERSTATE,
+				ROW_NUMBER() OVER(ORDER BY ORDERNUM DESC) AS RNUM
+				FROM MORDER
+				WHERE 1=1
+					<include refid = "search"></include>
+		) MP
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		ORDER BY ORDERNUM DESC
+</select>
+
+<!-- Order ListCount (ADMIN) -->
+<select id="listCount" resultType="int" parameterType="com.project.board.vo.SearchCriteria">
+		
+			SELECT COUNT(ORDERNUM)
+			FROM MORDER
+			WHERE 1=1
+			<include refid ="search"></include>
+</select>
+
+<!-- search SQl -->
+<sql id="search">
+	<if test="searchType != null">
+		<if test="searchType == 't'.toString()">AND MID LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'n'.toString()">AND ORDERPRODUCTNAME LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'm'.toString()">AND ORDERSTATE LIKE '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'tnm'.toString()">AND (MID LIKE '%' || #{keyword} || '%')
+		or (ORDERPRODUCTNAME LIKE '%' || #{keyword} || '%')
+		or (ORDERSTATE LIKE '%' || #{keyword} || '%') </if>				
+	</if>
+</sql>
+
+<!-- deliveryInfo update -->
+<update id = "updateDeliveryInfo" parameterType = "com.project.order.vo.OrderVO">
+	UPDATE MORDER
+	SET ORDERSTATE = #{orderState}
+	WHERE ORDERNUM = #{orderNum}
+</update>
+
+<!-- 주문 Ring Amount LIST -->
+<select id = "amountRing" resultType = "com.project.order.vo.OrderVO">
+	select orderamount
+	from morder m, ex_goods p
+	where p.catecode = 101
+	AND M.MGNUM = P.MGNUM
+</select>
+
+<!-- 주문 Earring Amount LIST -->
+<select id = "amountEarring" resultType = "com.project.order.vo.OrderVO">
+	select orderamount
+	from morder m, ex_goods p
+	where p.catecode = 102
+	AND M.MGNUM = P.MGNUM
+</select>
+
+<!-- 주문 Bracelet Amount LIST -->
+<select id = "amountBracelet" resultType = "com.project.order.vo.OrderVO">
+	select orderamount
+	from morder m, ex_goods p
+	where p.catecode = 103
+	AND M.MGNUM = P.MGNUM
+</select>
+
+<!-- 주문 Necklace Amount LIST -->
+<select id = "amountNecklace" resultType = "com.project.order.vo.OrderVO">
+	select orderamount
+	from morder m, ex_goods p
+	where p.catecode = 104
+	AND M.MGNUM = P.MGNUM
+</select>
+
+<!-- 상품 수량 조절 -->
+<update id="changeStock">
+	update ex_goods	
+	set mgStock = mgStock - #{orderAmount}
+	where mgNum= #{mgNum}
+</update>
+
+<select id = "sumPrice" resultType = "int">
+	select sum(orderprice) from morder
+</select>
+
+<select id = "counterOrder" resultType = "int">
+	select count(ordernum) from morder
+</select>
+
+
+</mapper>
